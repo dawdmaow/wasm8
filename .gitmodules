@@ -1,0 +1,6 @@
+[submodule "vendor/chip8-test-suite"]
+	path = vendor/chip8-test-suite
+	url = https://github.com/Timendus/chip8-test-suite
+[submodule "vendor/chip8-roms"]
+	path = vendor/chip8-roms
+	url = https://github.com/kripod/chip8-roms

@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en" style="height: 100%">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Chip8</title>
+    </head>
+
+    <body
+        id="body"
+        style="height: 100%; padding: 0; margin: 0; overflow: hidden"
+    >
+        <canvas id="wgpu-canvas" style="height: 100%; width: 100%"></canvas>
+
+        <script type="text/javascript" src="wasm-config.js"></script>
+        <script type="text/javascript" src="odin.js"></script>
+        <script type="text/javascript" src="wgpu.js"></script>
+        <script type="text/javascript">
+            const mem = new WebAssembly.Memory({
+                initial: WASM_INITIAL_MEMORY_PAGES,
+                maximum: WASM_MAX_MEMORY_PAGES,
+                shared: false,
+            });
+            const memInterface = new odin.WasmMemoryInterface();
+            memInterface.setMemory(mem);
+
+            const wgpuInterface = new odin.WebGPUInterface(memInterface);
+
+            let chip8AudioCtx = null;
+            let chip8Osc = null;
+            const chip8_sound = {
+                chip8_sound_set_timer: (v) => {
+                    if (v > 0) {
+                        if (!chip8AudioCtx) {
+                            chip8AudioCtx = new (window.AudioContext ||
+                                window.webkitAudioContext)();
+                        }
+                        if (chip8AudioCtx.state === "suspended")
+                            chip8AudioCtx.resume();
+                        if (!chip8Osc) {
+                            const gain = chip8AudioCtx.createGain();
+                            gain.gain.value = 0.1;
+                            gain.connect(chip8AudioCtx.destination);
+                            chip8Osc = chip8AudioCtx.createOscillator();
+                            chip8Osc.type = "square";
+                            chip8Osc.frequency.value = 440;
+                            chip8Osc.connect(gain);
+                            chip8Osc.start();
+                        }
+                    } else {
+                        if (chip8Osc) {
+                            try {
+                                chip8Osc.stop();
+                            } catch (_) {}
+                            chip8Osc = null;
+                        }
+                    }
+                },
+            };
+
+            // intSize must match build target: 4 for js_wasm32, 8 for js_wasm64p32
+            odin.runWasm(
+                "microui.wasm",
+                null,
+                {
+                    wgpu: wgpuInterface.getInterface(),
+                    chip8_sound: chip8_sound,
+                },
+                memInterface,
+                4,
+            );
+        </script>
+    </body>
+</html>
