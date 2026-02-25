@@ -2,6 +2,8 @@
 
 A CHIP-8 emulator + debugger with native and web builds.
 
+[GitHub Pages](https://dawdmaow.github.io/wasm8/)
+
 ![wasm8 screenshot](image.png)
 
 ## Quick Start
